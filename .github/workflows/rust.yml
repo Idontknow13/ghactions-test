@@ -38,7 +38,7 @@ jobs:
       id: artifact-name
       run: |
         for file in $(ls ./target/release/screamer* | sed 's|.*/||'); do
-          if [[ "$file" == "screamer" | "$file" == "screamer.exe" ]]; then
+          if [[ "$file" == "screamer" || "$file" == "screamer.exe" ]]; then
             echo "name=$file" >> "$GITHUB_OUTPUT"
           fi
         done
