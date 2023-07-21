@@ -50,7 +50,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: screamer
-        path: ./target/release/screamer-${{ matrix.os }} 
+        path: ./target/release/${{ steps.artifact-name-linux.outputs.name || steps.artifact-name-windows.outputs.name }}
 
   release:
     needs: [build]
