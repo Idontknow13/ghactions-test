@@ -9,6 +9,8 @@ fn main() {
     let mut numargs = std::env::args().filter_map(|arg| arg.parse::<usize>().ok());
     if let Some(chars) = numargs.next() {
         println!("{}", create_scream(chars));
+    } else {
+        println!("Not screaming today.")
     }
 }
 
