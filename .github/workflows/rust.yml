@@ -66,4 +66,5 @@ jobs:
       with:
         files: screamer/*
         fail_on_unmatched_files: true
+        body_path: CHANGELOG.md
         body: 'Release time!'
