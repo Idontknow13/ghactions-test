@@ -38,12 +38,13 @@ jobs:
       id: artifact-name
       run: |
         for file in $(ls ./target/release/screamer* | sed 's|.*/||'); do
-          if [ "$filename" != "screamer.d" ]; then
-            echo "name=$filename" >> "$GITHUB_OUTPUT"
+          if [ "$file" != "screamer.d" ]; then
+            echo "name=$file" >> "$GITHUB_OUTPUT"
           fi
         done
 
     - name: Upload Artifacts
+      if: steps.artifact-name.outputs.name
       uses: actions/upload-artifact@v3
       with:
         name: screamer
