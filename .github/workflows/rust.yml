@@ -1,4 +1,4 @@
-name: Rust
+name: Rust Release
 
 on:
   push:
@@ -10,33 +10,74 @@ env:
 
 jobs:
   build:
-    permissions: write-all
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      bin-name: ${{ steps.artifact-name-linux.outputs.name || steps.artifact-name-windows.outputs.name }}
 
     steps:
     - uses: actions/checkout@v3
+
     - name: Run check and clippy
-      run: cargo check && cargo clippy
+      run: |
+        cargo check
+        cargo clippy
+
     - name: Run tests
       run: cargo test --verbose
+
     - name: Build
       run: cargo build --release --verbose
-    # Publishing Build
+
+    - name: Rename bin to artifact (Linux)
+      id: artifact-name-linux
+      run: |
+        echo "name=screamer" >> "$GITHUB_OUTPUT"
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+    
+    - name: Rename bin to artifact (Windows)
+      id: artifact-name-windows
+      run: |
+        echo "name=screamer.exe" >> "$GITHUB_OUTPUT"
+      if: ${{ matrix.os == 'windows-latest' }}
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: screamer
+        path: ./target/release/screamer-${{ matrix.os }} 
+
+  release:
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions: write-all
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/download-artifact@v3
+
     - name: Release
-      id: create_release
+      id: release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ github.ref }}
         release_name: ${{ github.ref }}
+        body: Release time!
+
     - name: Upload Build
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BIN_NAME: ${{ needs.build.outputs.bin-name }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./target/release/screamer
-        asset_name: screamer
-        asset_content_type: application/x-elf
-      
+        upload_url: ${{ steps.release.outputs.upload_url }}
+        asset_path: screamer/${{ env.BIN_NAME }}
+        asset_name: ${{ env.BIN_NAME }}
+        asset_content_type: application/octet-stream
